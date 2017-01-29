@@ -337,8 +337,8 @@ public class TestDB extends javax.swing.JFrame
         String updateSqlMult = "UPDATE iseq.prices\n"
                 + "SET\n"
                 + "Current_Price = (Current_Price * 1.1)\n"
-                + "WHERE companynum = 34";
-                //+ "WHERE (Current_Price - Yesterdays_Price) > 30";
+                // + "WHERE companynum = 34";
+                + "WHERE (Current_Price - Yesterdays_Price) > 30";
         
         statement.addBatch(updateSqlMult);
         
