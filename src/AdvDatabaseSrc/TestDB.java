@@ -2,38 +2,50 @@ package AdvDatabaseSrc;
 
 import com.sun.rowset.JdbcRowSetImpl;
 import java.sql.CallableStatement;
+import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
 public class TestDB extends javax.swing.JFrame
 {
-
+    
     JdbcRowSetImpl rowSet;
-
+    
     String username = "sduser";
     String databaseURI = "jdbc:mysql://localhost:3306/iseq";
     String password = "pass";
-
+    Connection connection;
+    
     private void setupRowset() throws SQLException
     {
-
+        
         rowSet = new JdbcRowSetImpl();
-
+        
         rowSet.setUrl(databaseURI);
         rowSet.setUsername(username);
         rowSet.setPassword(password);
-
+        
     }
-
-    public TestDB()
+    
+    private void ConnectToDatabase() throws SQLException
     {
+        connection = DriverManager.getConnection(databaseURI, username, password);
+        
+    }
+    
+    public TestDB() throws SQLException
+    {
+        this.ConnectToDatabase();
+        
         initComponents();
     }
-
+    
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
@@ -120,12 +132,18 @@ public class TestDB extends javax.swing.JFrame
     }//GEN-LAST:event_alphaButtonActionPerformed
 
     private void priceIncrButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_priceIncrButtonActionPerformed
-
+        this.priceIncrButtonFunction();
 
     }//GEN-LAST:event_priceIncrButtonActionPerformed
 
     private void batchButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_batchButtonActionPerformed
-
+        try
+        {
+            this.batchFunction();
+        } catch (SQLException ex)
+        {
+            Logger.getLogger(TestDB.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }//GEN-LAST:event_batchButtonActionPerformed
 
@@ -173,10 +191,16 @@ public class TestDB extends javax.swing.JFrame
          */
         java.awt.EventQueue.invokeLater(new Runnable()
         {
-
+            
             public void run()
             {
-                new TestDB().setVisible(true);
+                try
+                {
+                    new TestDB().setVisible(true);
+                } catch (SQLException ex)
+                {
+                    Logger.getLogger(TestDB.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
@@ -191,38 +215,38 @@ public class TestDB extends javax.swing.JFrame
     private javax.swing.JButton spButton;
     // End of variables declaration//GEN-END:variables
 
-    private String createTextforRecordHeadings(JdbcRowSetImpl MyRowSet) throws SQLException
+    private String createTextforRecordHeadings(ResultSet resultSet) throws SQLException
     {
         String text = "";
-        ResultSetMetaData metaData = MyRowSet.getMetaData();
+        ResultSetMetaData metaData = resultSet.getMetaData();
         int numberOfColumns = metaData.getColumnCount();
-
+        
         for (int i = 1; i <= numberOfColumns; i++)
         {
             text += metaData.getColumnName(i) + "\t";
         }
         return text;
     }
-
-    private String createTextforRecords(JdbcRowSetImpl MyRowSet) throws SQLException
+    
+    private String createTextforRecords(ResultSet resultSet) throws SQLException
     {
-        ResultSetMetaData metaData = MyRowSet.getMetaData();
+        ResultSetMetaData metaData = resultSet.getMetaData();
         int numberOfColumns = metaData.getColumnCount();
-
+        
         String text = "";
-
-        while (MyRowSet.next())
+        
+        while (resultSet.next())
         {
             for (int i = 1; i <= numberOfColumns; i++)
             {
-                text += MyRowSet.getObject(i) + "\t";
+                text += resultSet.getObject(i) + "\t";
             }//end for
 
             text += "\n";
         }//end while
         return text;
     }
-
+    
     private void alphaButtonFuntion()
     {
         try
@@ -239,14 +263,14 @@ public class TestDB extends javax.swing.JFrame
                     + "FROM iseq.prices\n"
                     + "ORDER BY company ASC;");
             rowSet.execute();
-
+            
             String headings = this.createTextforRecordHeadings(rowSet);
             String results = this.createTextforRecords(rowSet);
-
+            
             rowSet.close();
-
+            
             output.setText(headings + "\n" + results);
-
+            
         }//end try
         catch (SQLException sqlex)
         {
@@ -254,16 +278,72 @@ public class TestDB extends javax.swing.JFrame
             System.exit(0);
         }
     }
-
+    
     private void callStoredProcedure() throws SQLException
     {
-        CallableStatement callableStatement =  connection.prepareCall ("{call getCompanybyID(?)}");
+        CallableStatement callableStatement = connection.prepareCall("{call getCompanybyID(?)}");
         
         String agentID_ = JOptionPane.showInputDialog("Enter ID of agent");
         int agentID = Integer.parseInt(agentID_);
         
-        callableStatement.setInt (1, agentID);
+        callableStatement.setInt(1, agentID);
         
         ResultSet resultSet = callableStatement.executeQuery();
+        
+        String headings = this.createTextforRecordHeadings(resultSet);
+        String results = this.createTextforRecords(resultSet);
+        
+        resultSet.close();
+        
+        output.setText(headings + "\n" + results);
+    }
+    
+    private void priceIncrButtonFunction()
+    {
+        try
+        {
+            this.setupRowset();
+            rowSet.setCommand("SELECT companynum,\n"
+                    + "company, \n"
+                    + "Current_Price, \n"
+                    + "Yesterdays_Price, \n"
+                    + "Shares_Traded_Yesterday, \n"
+                    + "Yearly_Low, \n"
+                    + "Yearly_High,\n"
+                    + "(Current_Price - Yesterdays_Price) AS Price_Difference,"
+                    + "Listing_Date\n"
+                    + "FROM iseq.prices\n"
+                    + "ORDER BY  (Current_Price - Yesterdays_Price) DESC;");
+            rowSet.execute();
+            
+            String headings = this.createTextforRecordHeadings(rowSet);
+            String results = this.createTextforRecords(rowSet);
+            
+            rowSet.close();
+            
+            output.setText(headings + "\n" + results);
+            
+        }//end try
+        catch (SQLException sqlex)
+        {
+            JOptionPane.showMessageDialog(null, sqlex.toString());
+            System.exit(0);
+        }
+    }
+    
+    private void batchFunction() throws SQLException
+    {
+        Statement statement = connection.createStatement();
+        String updateSqlMult = "UPDATE iseq.prices\n"
+                + "SET\n"
+                + "Current_Price = (Current_Price * 1.1)\n"
+                + "WHERE companynum = 34";
+                //+ "WHERE (Current_Price - Yesterdays_Price) > 30";
+        
+        statement.addBatch(updateSqlMult);
+        
+        int[] recordsAffected = statement.executeBatch();
+        System.out.println("Number of records updated = "  + recordsAffected.length);
+        
     }
 }

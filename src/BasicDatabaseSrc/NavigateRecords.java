@@ -1,66 +1,67 @@
-package src;
+package BasicDatabaseSrc;
 
-import java.awt.HeadlessException;
 import java.sql.*;
-import javax.swing.JFrame;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 
-
-public final class NavigateRecords extends javax.swing.JFrame {
-    
+public final class NavigateRecords extends javax.swing.JFrame
+{
     ResultSet resultSet;
     Connection connection;
     Statement statement;
-    
-    public NavigateRecords() {
+
+    public NavigateRecords()
+    {
         initComponents();
-        
 
-        try {
+        try
+        {
+            //create the connection object
+            //ATTN: username and password must be changed depending on the settings on your database server
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/books", "sd3user", "pass");
 
-              //create the connection object
-              //ATTN: username and password must be changed depending on the settings on your database server
-              connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/books", "sd3user", "pass");
+            //create a statement object.
+            //We will use this object to carry our query to the database
+            statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
 
-              //create a statement object.
-	      //We will use this object to carry our query to the database
-	     statement = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-                                      ResultSet.CONCUR_UPDATABLE);
+            //exexute our query, which will lead to the return of a resultset
+            resultSet = statement.executeQuery("SELECT * FROM authors");
 
-              //exexute our query, which will lead to the return of a resultset
-	      resultSet = statement.executeQuery("SELECT * FROM authors");
-
-              if (resultSet.next()) {
+            if (resultSet.next())
+            {
                 loadRecord();
-              } //end if
-      
-              else {
+            } //end if
+            else
+            {
                 JOptionPane.showMessageDialog(null, "There are no records in the database");
-              } //end else
+            } //end else
         }//end try
-
-	catch(SQLException sqlex) {
+        catch (SQLException sqlex)
+        {
             JOptionPane.showMessageDialog(null, sqlex.toString());
             System.exit(0);
-	}
+        }
     }
-    
-    public void loadRecord() {
-        
-        try  {
+
+    public void loadRecord()
+    {
+
+        try
+        {
             String authorsID = resultSet.getObject(1).toString();
             String authorsFirstName = resultSet.getObject(2).toString();
             String authorsSecondName = resultSet.getObject(3).toString();
 
             authorIDTextfield.setText(authorsID);
             fnameTextField.setText(authorsFirstName);
-            lnameTextfield.setText(authorsSecondName);    
-        }
-        catch(SQLException ex) {
+            lnameTextfield.setText(authorsSecondName);
+        } catch (SQLException ex)
+        {
             JOptionPane.showMessageDialog(null, "ERROR " + ex);
         }
-}
-
+    }
 
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
@@ -204,49 +205,61 @@ public final class NavigateRecords extends javax.swing.JFrame {
     }//GEN-LAST:event_exitButtonActionPerformed
 
     private void nextButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_nextButtonActionPerformed
-        try  {
-            if (resultSet.next()) {
+        try
+        {
+            if (resultSet.next())
+            {
                 loadRecord();
-            }
-            else {
+            } else
+            {
                 JOptionPane.showMessageDialog(null, "You have reached the end of the list");
                 resultSet.last();
             }
         }//end try
-        catch(Exception ex) {
+        catch (SQLException ex)
+        {
             JOptionPane.showMessageDialog(null, ex.toString());
-        }//end catch
+        }
+        //end catch
     }//GEN-LAST:event_nextButtonActionPerformed
 
     private void previousButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_previousButtonActionPerformed
-        try  {
-            if (resultSet.previous()) {
+        try
+        {
+            if (resultSet.previous())
+            {
                 loadRecord();
-            }
-            else {
+            } else
+            {
                 JOptionPane.showMessageDialog(null, "You have reached the start of the list");
                 resultSet.first();
             }
         }//end try
-        catch(Exception ex) {
+        catch (SQLException ex)
+        {
             JOptionPane.showMessageDialog(null, ex.toString());
-        }//end catch
+        }
+        //end catch
     }//GEN-LAST:event_previousButtonActionPerformed
 
     private void firstButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_firstButtonActionPerformed
-        try {
+        try
+        {
             resultSet.first();
             loadRecord();
-        } catch (SQLException ex) {
-             JOptionPane.showMessageDialog(null, "ERROR" + ex);
+        } catch (SQLException ex)
+        {
+            JOptionPane.showMessageDialog(null, "ERROR" + ex);
         }
     }//GEN-LAST:event_firstButtonActionPerformed
 
     private void lastButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_lastButtonActionPerformed
-       try {
+        try
+        {
             resultSet.last();
             loadRecord();
-        } catch (SQLException ex) {
+        } catch (SQLException ex)
+        {
             JOptionPane.showMessageDialog(null, "ERROR" + ex);
         }
     }//GEN-LAST:event_lastButtonActionPerformed
@@ -268,74 +281,76 @@ public final class NavigateRecords extends javax.swing.JFrame {
     }//GEN-LAST:event_lnameTextfieldMouseClicked
 
     private void updateButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateButtonActionPerformed
-   
-       lnameTextfield.setEditable(false);
-       fnameTextField.setEditable(false);
-       authorIDTextfield.setEditable(false);
 
-       try {
-               //update the individual fields in the resultset on the current row
-               resultSet.updateInt("AuthorID", Integer.parseInt(authorIDTextfield.getText()));
-               resultSet.updateString("FirstName", fnameTextField.getText());
-               resultSet.updateString("LastName", lnameTextfield.getText());
+        lnameTextfield.setEditable(false);
+        fnameTextField.setEditable(false);
+        authorIDTextfield.setEditable(false);
 
-               //update the underlying db
-               resultSet.updateRow();
-            
-       }//end try
-            
-       catch (SQLException ex) {
-                
-                JOptionPane.showMessageDialog(null, ex.toString());
-            
-       }//end catch
-            
-    
-       JOptionPane.showMessageDialog(null, "Record was updated");
+        try
+        {
+            //update the individual fields in the resultset on the current row
+            resultSet.updateInt("AuthorID", Integer.parseInt(authorIDTextfield.getText()));
+            resultSet.updateString("FirstName", fnameTextField.getText());
+            resultSet.updateString("LastName", lnameTextfield.getText());
 
+            //update the underlying db
+            resultSet.updateRow();
+
+        }//end try
+        catch (SQLException ex)
+        {
+            JOptionPane.showMessageDialog(null, ex.toString());
+        }//end catch
+        JOptionPane.showMessageDialog(null, "Record was updated");
     }//GEN-LAST:event_updateButtonActionPerformed
 
     private void deleteButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteButtonActionPerformed
-       int choice = JOptionPane.showConfirmDialog(null, "Are You Sure You Want To Delete This Record","Books DB", JOptionPane.YES_NO_OPTION);
-     
-       if (choice == JOptionPane.NO_OPTION) 
-           JOptionPane.showMessageDialog(null, "The Record Has NOT Been Deleted");
+        int choice = JOptionPane.showConfirmDialog(null, "Are You Sure You Want To Delete This Record", "Books DB", JOptionPane.YES_NO_OPTION);
 
-       else {
-           try {
-               
-               resultSet.deleteRow();
-               
-               JOptionPane.showMessageDialog(null,"The record has been deleted from the database");
-               
-               if (!resultSet.next())
-                   resultSet.first();
-                           
-               loadRecord();
-               
-         }//end try           
-           catch (SQLException | HeadlessException ex) {
-               JOptionPane.showMessageDialog(null, ex.toString());
-           }//end catch
-          
-           
-       }//end else
-           
+        if (choice == JOptionPane.NO_OPTION)
+        {
+            JOptionPane.showMessageDialog(null, "The Record Has NOT Been Deleted");
+        } else
+        {
+
+            try
+            {
+                resultSet.deleteRow();
+
+                JOptionPane.showMessageDialog(null, "The record has been deleted from the database");
+
+                if (!resultSet.next())
+                {
+                    resultSet.first();
+                }
+
+                loadRecord();
+            } //end else
+            catch (SQLException ex)
+            {
+                Logger.getLogger(NavigateRecords.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
+
     }//GEN-LAST:event_deleteButtonActionPerformed
 
     private void insertButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertButtonActionPerformed
-    
+
         setVisible(false);
-        
+
         InsertForm insertForm = new InsertForm(this, resultSet);
-        
+
         insertForm.setVisible(true);
-   
+
     }//GEN-LAST:event_insertButtonActionPerformed
 
-    public static void main(String args[]) {
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
+    public static void main(String args[])
+    {
+        java.awt.EventQueue.invokeLater(new Runnable()
+        {
+            public void run()
+            {
                 new NavigateRecords().setVisible(true);
             }
         });
