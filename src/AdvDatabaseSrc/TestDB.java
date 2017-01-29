@@ -338,7 +338,7 @@ public class TestDB extends javax.swing.JFrame
                 + "SET\n"
                 + "Current_Price = (Current_Price * 1.1)\n"
                 // + "WHERE companynum = 34";
-                + "WHERE (Current_Price - Yesterdays_Price) > 30";
+                + "WHERE (Current_Price - Yesterdays_Price) > 30";//to fix
         
         statement.addBatch(updateSqlMult);
         
